@@ -1,5 +1,5 @@
-use loco_rs::{boot::run_task, task, testing};
 use fairwin_be::app::App;
+use loco_rs::{boot::run_task, task, testing};
 use serial_test::serial;
 
 #[tokio::test]

@@ -1,5 +1,5 @@
-use loco_rs::cli;
 use fairwin_be::app::App;
+use loco_rs::cli;
 use migration::Migrator;
 
 #[tokio::main]

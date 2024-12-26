@@ -39,7 +39,4 @@ enum Pools {
     DrawnTime,
     CreatedTime,
     CreatedBy,
-    
 }
-
-
