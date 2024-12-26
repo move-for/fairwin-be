@@ -1,51 +1,14 @@
-# Welcome to Loco :train:
+## Welcome to Sui
 
-[Loco](https://loco.rs) is a web and API framework running on Rust.
+This is a backend using `Sui` Rust-SDK to interact with the Sui blockchain, powered by [Loco](https://loco.rs).
 
-This is the **Rest API starter** which includes a `User` model and authentication based on JWT.
+At first, Backend will has a few functions to interact with the Sui blockchain.
+  - Create a Pool periodically
+  - Draw a Pool periodically
+
 
 ## Quick Start
 
 ```sh
 cargo loco start
 ```
-
-```sh
-$ cargo loco start
-Finished dev [unoptimized + debuginfo] target(s) in 21.63s
-    Running `target/debug/myapp start`
-
-    :
-    :
-    :
-
-controller/app_routes.rs:203: [Middleware] Adding log trace id
-
-                      ▄     ▀
-                                 ▀  ▄
-                  ▄       ▀     ▄  ▄ ▄▀
-                                    ▄ ▀▄▄
-                        ▄     ▀    ▀  ▀▄▀█▄
-                                          ▀█▄
-▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄▄▄ ▀▀█
- ██████  █████   ███ █████   ███ █████   ███ ▀█
- ██████  █████   ███ █████   ▀▀▀ █████   ███ ▄█▄
- ██████  █████   ███ █████       █████   ███ ████▄
- ██████  █████   ███ █████   ▄▄▄ █████   ███ █████
- ██████  █████   ███  ████   ███ █████   ███ ████▀
-   ▀▀▀██▄ ▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀ ██▀
-       ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-                https://loco.rs
-
-environment: development
-   database: automigrate
-     logger: debug
-compilation: debug
-      modes: server
-
-listening on http://localhost:5150
-```
-
-## Getting help
-
-Check out [a quick tour](https://loco.rs/docs/getting-started/tour/) or [the complete guide](https://loco.rs/docs/getting-started/guide/).
