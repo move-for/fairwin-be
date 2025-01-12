@@ -1,6 +1,7 @@
 [alias]
-loco = "run --bin fairwin_be-cli --"
+loco = "run --bin fairwin-cli --"
 loco-tool = "run --bin tool --"
 playground = "run --example playground"
 fmt-all = "fmt --all -- --check"
-clippy-all = "clippy --all-targets --all-features -- -D warnings"
+clippy-all = "clippy --all-targets --all-features -- -D warnings -W clippy::pedantic -W rust-2018-idioms"
+# clippy-all = "clippy --all-targets --all-features -- -D warnings -W clippy::pedantic -W clippy::nursery -W rust-2018-idioms"
