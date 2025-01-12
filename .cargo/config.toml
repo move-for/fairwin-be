@@ -1,4 +1,4 @@
 [alias]
-loco = "run --"
+loco = "run --bin fairwin_be-cli --"
 loco-tool = "run --bin tool --"
 playground = "run --example playground"
