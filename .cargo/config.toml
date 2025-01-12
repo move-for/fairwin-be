@@ -2,3 +2,5 @@
 loco = "run --bin fairwin_be-cli --"
 loco-tool = "run --bin tool --"
 playground = "run --example playground"
+fmt-all = "fmt --all -- --check"
+clippy-all = "clippy --all-targets --all-features -- -D warnings"

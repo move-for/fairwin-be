@@ -2,5 +2,6 @@
 
 pub mod prelude;
 
+pub mod contract_infos;
 pub mod pools;
 pub mod users;
