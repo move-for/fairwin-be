@@ -1,4 +1,6 @@
-pub use super::_entities::contracts::{ActiveModel, Entity, Model};
+use loco_rs::prelude::*;
+
+pub use super::_entities::contracts::{self, ActiveModel, Entity, Model};
 use sea_orm::entity::prelude::*;
 pub type Contracts = Entity;
 
@@ -19,7 +21,31 @@ impl ActiveModelBehavior for ActiveModel {
 }
 
 // implement your read-oriented logic here
-impl Model {}
+impl Model {
+    // Find a contract by package_id
+    pub async fn find_by_package_id(
+        db: &DatabaseConnection,
+        package_id: &str,
+    ) -> ModelResult<Self> {
+        let contract = contracts::Entity::find()
+            .filter(contracts::Column::PackageId.eq(package_id))
+            .one(db)
+            .await?;
+        contract.ok_or_else(|| ModelError::EntityNotFound)
+    }
+
+    // Find a contract by registry_id
+    pub async fn find_by_registry_id(
+        db: &DatabaseConnection,
+        registry_id: &str,
+    ) -> ModelResult<Self> {
+        let contract = contracts::Entity::find()
+            .filter(contracts::Column::RegistryId.eq(registry_id))
+            .one(db)
+            .await?;
+        contract.ok_or_else(|| ModelError::EntityNotFound)
+    }
+}
 
 // implement your write-oriented logic here
 impl ActiveModel {}
