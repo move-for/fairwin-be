@@ -15,7 +15,7 @@ loco-rs = { version = "0.14.0" }
 [dependencies]
 shuttle-axum = "0.51.0"
 shuttle-runtime = { version = "0.51.0", default-features = false }
-shuttle-shared-db = { version = "0.51.0", features = ["postgres"] }
+shuttle-shared-db = { version = "0.51.0", features = ["postgres", "sqlx"] }
 
 loco-rs = { workspace = true  }
 serde = { version = "1", features = ["derive"] }
