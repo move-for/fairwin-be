@@ -1,10 +1,10 @@
 use chrono::{offset::Local, Duration};
-use insta::assert_debug_snapshot;
-use loco_rs::testing::prelude::*;
 use fairwin::{
     app::App,
     models::users::{self, Model, RegisterParams},
 };
+use insta::assert_debug_snapshot;
+use loco_rs::testing::prelude::*;
 use sea_orm::{ActiveModelTrait, ActiveValue, IntoActiveModel};
 use serial_test::serial;
 
