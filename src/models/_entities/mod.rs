@@ -3,4 +3,5 @@
 pub mod prelude;
 
 pub mod contracts;
+pub mod pools;
 pub mod users;

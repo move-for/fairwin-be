@@ -10,9 +10,7 @@ pub struct Model {
     pub updated_at: DateTimeWithTimeZone,
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique)]
     pub package_id: String,
-    #[sea_orm(unique)]
     pub registry_id: String,
     pub network: String,
     pub is_active: bool,
@@ -20,4 +18,13 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::pools::Entity")]
+    Pools,
+}
+
+impl Related<super::pools::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Pools.def()
+    }
+}
