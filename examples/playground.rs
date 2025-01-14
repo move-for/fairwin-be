@@ -32,10 +32,10 @@ async fn main() -> loco_rs::Result<()> {
         registry_id: Set("test".to_string()),
         network: Set("test".to_string()),
         is_active: Set(true),
-        created_at: Set(DateTime::<Utc>::from_timestamp_millis(1735122600000)
+        created_at: Set(DateTime::<Utc>::from_timestamp_millis(1_735_122_600_000)
             .unwrap()
             .into()),
-        updated_at: Set(DateTime::<Utc>::from_timestamp_millis(1735122600000)
+        updated_at: Set(DateTime::<Utc>::from_timestamp_millis(1_735_122_600_000)
             .unwrap()
             .into()),
         id: Set(1),
@@ -51,11 +51,11 @@ async fn main() -> loco_rs::Result<()> {
     assert_eq!(res.registry_id, "test");
     assert_eq!(res.package_id, "test");
     assert_eq!(res.network, "test");
-    assert_eq!(res.is_active, true);
+    assert!(res.is_active);
     assert_eq!(res.id, 1);
     assert_eq!(res.version, 1);
 
-    println!("{:?}", res);
+    println!("{res:#?}");
 
     println!("welcome to playground. edit me at `examples/playground.rs`");
 

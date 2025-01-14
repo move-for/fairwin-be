@@ -20,9 +20,13 @@ impl ActiveModelBehavior for ActiveModel {
     }
 }
 
-// implement your read-oriented logic here
+/// implement your read-oriented logic here
 impl Model {
-    // Find a contract by package_id
+    /// Find a contract by `package_id`
+    ///
+    /// # Errors
+    //
+    // When the contract is not found in the database
     pub async fn find_by_package_id(
         db: &DatabaseConnection,
         package_id: &str,
@@ -34,7 +38,11 @@ impl Model {
         contract.ok_or_else(|| ModelError::EntityNotFound)
     }
 
-    // Find a contract by registry_id
+    /// Find a contract by `registry_id`
+    ///
+    /// # Errors
+    ///
+    /// When the contract is not found in the database
     pub async fn find_by_registry_id(
         db: &DatabaseConnection,
         registry_id: &str,
