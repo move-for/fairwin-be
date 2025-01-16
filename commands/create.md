@@ -1,9 +1,16 @@
 
-### Create ContractInfo model
+### Create Contract model
 
 ```sh
 cargo loco generate model contract package_id:string! registry_id:string! network:string! is_active:bool! version:int!
 ```
+
+### Add vault_id to Contract model
+
+```sh
+cargo loco g migration AddVaultIdToContracts vault_id:string!
+```
+
 
 ### Create a Pool model
 

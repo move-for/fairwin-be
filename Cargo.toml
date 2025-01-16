@@ -37,8 +37,19 @@ sea-orm = { version = "1.1.0", features = [
 ] }
 chrono = { version = "0.4" }
 validator = { version = "0.19" }
-uuid = { version = "1.6.0", features = ["v4"] }
+uuid = { version = "1.12", features = ["v4"] }
 include_dir = { version = "0.7" }
+
+# For Sui
+sui_sdk = { git = "https://github.com/mystenlabs/sui", package = "sui-sdk"}
+sui_config = { git = "https://github.com/mystenlabs/sui", package = "sui-config"}
+sui_json_rpc_types = { git = "https://github.com/mystenlabs/sui", package = "sui-json-rpc-types"}
+sui_keys = { git = "https://github.com/mystenlabs/sui", package = "sui-keys"}
+shared_crypto = { git = "https://github.com/mystenlabs/sui", package = "shared-crypto"}
+bcs = "0.1.6"
+anyhow = "1.0"
+futures = "0.3.31"
+reqwest = "0.12"
 
 [[bin]]
 name = "fairwin-cli"
