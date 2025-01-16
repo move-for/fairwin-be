@@ -14,9 +14,9 @@ use super::util::get_owned_object_arg;
 
 /// Build a programmable transaction to set the fee rate
 ///
-/// # Errors:
+/// # Errors
 ///
-/// When Sui network is not connected
+/// Will return `Err` When Sui network is not connected
 /// Or when the registry id is not a valid object id
 /// Or when the new rate is not a valid u64
 pub async fn build_set_fee_rate_pt(
@@ -49,9 +49,10 @@ pub async fn build_set_fee_rate_pt(
 
 /// Build create lottery pool ptb   // TODO:
 ///
-/// # Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
+#[allow(clippy::too_many_arguments)]
 pub async fn build_create_lottery_pool_pt(
     client: &SuiClient,
     pkg_id: &str,
@@ -93,7 +94,7 @@ pub async fn build_create_lottery_pool_pt(
 
 /// Build draw lottery pool ptb   
 ///
-/// Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
 /// Or when the draw id is not a valid object id
@@ -101,6 +102,7 @@ pub async fn build_create_lottery_pool_pt(
 /// Or when the vault id is not a valid object id
 /// Or when the pool id is not a valid object id
 /// Or when the type tag is not a valid type tag
+#[allow(clippy::too_many_arguments)]
 pub async fn build_draw_lottery_pool_pt(
     client: &SuiClient,
     pkg_id: &str,
@@ -151,7 +153,7 @@ pub async fn build_draw_lottery_pool_pt(
 
 /// Build a programmable transaction with given arguments
 ///
-/// # Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
 /// Or when the package id is not a valid object id

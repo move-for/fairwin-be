@@ -1,3 +1,15 @@
+//! Call a contract function
+//!
+//!  1. Create a `SuiClient` and sender address
+//!  2. Get a gas coin object
+//!  3. Building a `ProgrammableTransactionBuilder` (ptb)
+//!  4. Add arguments to the ptb
+//!  5. Sign the ptb
+//!  6. Send the ptb to Sui network
+//!  7. Parse the response
+//!  8. save the object id to the database
+//!
+
 use futures::{future, stream::StreamExt};
 
 use tracing::info;
@@ -26,28 +38,14 @@ use sui_config::{
     sui_config_dir, Config, PersistedConfig, SUI_CLIENT_CONFIG, SUI_KEYSTORE_FILENAME,
 };
 
-// use sui_sdk::{
-//     types::{
-//         base_types::{ObjectRef, SuiAddress},
-//         quorum_driver_types::ExecuteTransactionRequestType,
-//         transaction::{ProgrammableTransaction, Transaction, TransactionData},
-//     },
-//     SuiClient,
-// };
-
 use shared_crypto::intent::Intent;
 use sui_json_rpc_types::{SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions};
 
-/// Call a contract function
-///  1. Create a SuiClient and sender address
-///  2. Get a gas coin object
-///  3. Building a ProgrammableTransactionBuilder(ptb)
-///  4. Add arguments to the ptb
-///  5. Sign the ptb
-///  6. Send the ptb to Sui network
-///  7. Parse the response
-///  8. save the object id to the database
-
+/// Call entry function for Sui network of Move
+///
+/// # Errors
+///
+/// When Sui network is not connected
 pub async fn call_function(
     client: &SuiClient,
     keystore: FileBasedKeystore,
@@ -75,7 +73,7 @@ pub async fn call_function(
 
 /// Get object by id
 ///
-/// Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
 pub async fn get_object_by_id(
@@ -89,6 +87,11 @@ pub async fn get_object_by_id(
         .into_object()?)
 }
 
+/// Get owned object arg
+///
+/// # Errors
+///
+/// When Sui network is not connected or when the object id is not a valid object id
 pub async fn get_owned_object_arg(client: &SuiClient, id: &str) -> Result<CallArg, anyhow::Error> {
     let object = get_object_by_id(client, id).await?;
     Ok(CallArg::Object(ObjectArg::ImmOrOwnedObject((
@@ -100,7 +103,7 @@ pub async fn get_owned_object_arg(client: &SuiClient, id: &str) -> Result<CallAr
 
 /// Fetch coin from client
 ///
-/// Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
 pub async fn fetch_coin(
@@ -129,7 +132,7 @@ pub async fn fetch_coin(
 
 /// retrieve wallet from config
 ///
-/// Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
 pub fn retrieve_wallet() -> Result<WalletContext, anyhow::Error> {
@@ -187,7 +190,7 @@ pub fn retrieve_wallet() -> Result<WalletContext, anyhow::Error> {
 
 /// Setup sui client and get active address
 ///
-/// Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
 pub async fn setup_for_read() -> Result<(SuiClient, SuiAddress), anyhow::Error> {
@@ -196,18 +199,19 @@ pub async fn setup_for_read() -> Result<(SuiClient, SuiAddress), anyhow::Error> 
     println!("Sui testnet version is: {}", client.api_version());
 
     let mut wallet = retrieve_wallet()?;
-    assert!(wallet.get_addresses().len() >= 2);
+
+    // assert_eq!(wallet.get_addresses().len(), 2);
 
     let active_address = wallet.active_address()?;
 
-    println!("Active address is: {active_address}");
+    // println!("Active address is: {active_address}");
 
     Ok((client, active_address))
 }
 
 /// Setup sui config to build client and get addresses
 ///
-/// Errors:
+/// # Errors
 ///
 /// When Sui network is not connected
 pub async fn setup_and_write() -> Result<(SuiClient, SuiAddress, SuiAddress), anyhow::Error> {
@@ -228,7 +232,9 @@ pub async fn setup_and_write() -> Result<(SuiClient, SuiAddress, SuiAddress), an
         .filter(|a| a != &active_address)
         .collect::<Vec<_>>();
 
-    let recipient = addresses.first().expect("No addresses found");
+    let recipient = addresses
+        .first()
+        .ok_or_else(|| anyhow::anyhow!("No addresses found"))?;
 
     Ok((client, active_address, *recipient))
 }
