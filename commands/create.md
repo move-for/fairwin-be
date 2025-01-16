@@ -2,13 +2,13 @@
 ### Create Contract model
 
 ```sh
-cargo loco generate model contract package_id:string! registry_id:string! network:string! is_active:bool! version:int!
+cargo loco generate model contract package_id:string! registry_id:string! vault_id:string! create_cap_id:string! registry_initial_version:int! network:string! is_active:bool! version:int!
 ```
 
 ### Add vault_id to Contract model
 
 ```sh
-cargo loco g migration AddVaultIdToContracts vault_id:string!
+cargo loco g migration AddVaultIdAndCreateCapIdAndRegistryInitialVersionToContracts vault_id:string! create_cap_id:string! registry_initial_version:int!
 ```
 
 

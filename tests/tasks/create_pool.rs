@@ -11,7 +11,7 @@ async fn test_can_run_create_pool() {
 
     assert!(run_task::<App>(
         &boot.app_context,
-        Some(&"create_pool".to_string()),
+        Some(&"CreatePool".to_string()),
         &task::Vars::default()
     )
     .await

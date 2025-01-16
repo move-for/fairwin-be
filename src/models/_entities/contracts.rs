@@ -15,6 +15,9 @@ pub struct Model {
     pub network: String,
     pub is_active: bool,
     pub version: i32,
+    pub vault_id: String,
+    pub create_cap_id: String,
+    pub registry_initial_version: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
