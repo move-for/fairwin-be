@@ -32,12 +32,15 @@ workers:
 
 # Mailer Configuration.
 mailer:
+  # Enable stub
+  #stub: true
   # SMTP mailer configuration.
   smtp:
     # Enable/Disable smtp mailer.
     enable: true
     # SMTP server host. e.x localhost, smtp.gmail.com
-    host: {{ get_env(name="MAILER_HOST", default="localhost") }}
+    # host: {{ get_env(name="MAILER_HOST", default="localhost") }}
+    host: localhost
     # SMTP server port
     port: 1025
     # Use secure connection (SSL/TLS).
@@ -78,7 +81,8 @@ database:
 queue:
   kind: Postgres
   # Redis connection URI
-  uri: {{ get_env(name="REDIS_URL", default="redis://127.0.0.1") }}
+  # uri: {{ get_env(name="REDIS_URL", default="redis://127.0.0.1") }}
+  uri: {{ get_env(name="POSTGRES_URL", default="postgres://loco:loco@localhost:5432/fairwin_development") }}
   # Dangerously flush all data in Redis on startup. dangerous operation, make sure that you using this flag only on dev environments or test mode
   dangerously_flush: false
 
@@ -90,3 +94,25 @@ auth:
     secret: GHztVJLY3RTx9SjJ6KSD
     # Token expiration time in seconds
     expiration: 604800 # 7 days
+
+scheduler:
+  # Location of shipping the command stdout and stderr.
+  output: stdout
+  # A list of jobs to be scheduled.
+  jobs:
+    cmd_write:
+      # by default false meaning execute the run value as a task. 
+      # If true, execute the run value as shell command
+      shell: true
+      # Command to run
+      run: "echo hello test >> ./scheduler.txt"
+      schedule: run every 1 minute
+      output: silent
+      tags: ['base', 'infra']
+
+    create_pool:
+      run: "CreatePool"
+      schedule: run every 1 minute
+      # output: silent
+      tags: ['base']
+
