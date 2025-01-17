@@ -19,7 +19,7 @@ cargo loco db migrate
 cargo loco g migration AddDrawCapIdToContracts draw_cap_id:string!
 
 cargo loco db migrate
-
+### update contract model 
 cargo loco db entities
 ```
 

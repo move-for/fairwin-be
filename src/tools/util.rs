@@ -10,6 +10,8 @@
 //!  8. save the object id to the database
 //!
 
+use chrono::Utc;
+
 use futures::{future, stream::StreamExt};
 
 use tracing::info;
@@ -237,4 +239,19 @@ pub async fn setup_and_write() -> Result<(SuiClient, SuiAddress, SuiAddress), an
         .ok_or_else(|| anyhow::anyhow!("No addresses found"))?;
 
     Ok((client, active_address, *recipient))
+}
+
+/// Get current time in milliseconds
+#[must_use]
+pub fn get_current_millis() -> u64 {
+    let now = Utc::now(); 
+    now.timestamp_millis().unsigned_abs() 
+}
+
+/// Get milleseconds after 1 day
+#[must_use]
+pub fn get_millis_after_1_day() -> u64 {
+    let now = Utc::now(); 
+    let time_ms = now.timestamp_millis() + 24 * 60 * 60 * 1000;
+    time_ms.unsigned_abs()
 }

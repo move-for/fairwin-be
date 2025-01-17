@@ -1,7 +1,7 @@
 use loco_rs::prelude::*;
 
 pub use super::_entities::contracts::{self, ActiveModel, Entity, Model};
-use sea_orm::entity::prelude::*;
+use sea_orm::{entity::prelude::*, QueryOrder};
 pub type Contracts = Entity;
 
 #[async_trait::async_trait]
@@ -49,6 +49,19 @@ impl Model {
     ) -> ModelResult<Self> {
         let contract = contracts::Entity::find()
             .filter(contracts::Column::RegistryId.eq(registry_id))
+            .one(db)
+            .await?;
+        contract.ok_or_else(|| ModelError::EntityNotFound)
+    }
+
+    /// Find latest contract
+    ///
+    /// # Errors
+    ///
+    /// When the contract is not found in the database
+    pub async fn find_latest(db: &DatabaseConnection) -> ModelResult<Self> {
+        let contract = contracts::Entity::find()
+            .order_by_desc(contracts::Column::Id)
             .one(db)
             .await?;
         contract.ok_or_else(|| ModelError::EntityNotFound)
