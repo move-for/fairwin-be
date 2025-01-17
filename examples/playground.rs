@@ -43,6 +43,7 @@ async fn main() -> loco_rs::Result<()> {
         vault_id: Set("test".to_string()),
         create_cap_id: Set("test".to_string()),
         registry_initial_version: Set(1),
+        draw_cap_id: Set("test".to_string()),
     };
 
     active_model.insert(&ctx.db).await.unwrap();

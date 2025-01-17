@@ -9,8 +9,19 @@ cargo loco generate model contract package_id:string! registry_id:string! vault_
 
 ```sh
 cargo loco g migration AddVaultIdAndCreateCapIdAndRegistryInitialVersionToContracts vault_id:string! create_cap_id:string! registry_initial_version:int!
+
+cargo loco db migrate
 ```
 
+### Add draw_cap_id to Contract model
+
+```sh
+cargo loco g migration AddDrawCapIdToContracts draw_cap_id:string!
+
+cargo loco db migrate
+
+cargo loco db entities
+```
 
 ### Create a Pool model
 

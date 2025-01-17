@@ -18,6 +18,7 @@ pub struct Model {
     pub vault_id: String,
     pub create_cap_id: String,
     pub registry_initial_version: i32,
+    pub draw_cap_id: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
