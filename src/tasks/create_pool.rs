@@ -3,14 +3,17 @@
 use loco_rs::prelude::*;
 
 use sui_config::{sui_config_dir, SUI_KEYSTORE_FILENAME};
-use sui_json_rpc_types::SuiTransactionBlockResponse;
+use sui_json_rpc_types::ObjectChange;
 use sui_keys::keystore::FileBasedKeystore;
 
 use crate::{
-    models::contracts,
+    models::{contracts, pools},
     tools::{
         ptb::build_create_lottery_pool_pt,
-        util::{call_function, fetch_coin, get_millis_after_1_day, setup_and_write},
+        util::{
+            call_function, fetch_coin, get_datetime_after_1_day, get_millis_after_1_day,
+            setup_and_write,
+        },
     },
 };
 
@@ -25,19 +28,18 @@ impl Task for CreatePool {
     }
 
     async fn run(&self, app_context: &AppContext, vars: &task::Vars) -> Result<()> {
-        // TODO: Create pool
+        // Create pool
         let resp = create_pool(
             app_context,
             "daily",
             "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
             vars,
         )
-        .await
-        .map_err(|e| anyhow::anyhow!(e));
+        .await;
 
         match resp {
-            Ok(resp) => {
-                dbg!("resp: {}", resp.object_changes);
+            Ok(lottery_pool_id) => {
+                dbg!("lottery_pool_id: {}", lottery_pool_id);
             }
             Err(e) => {
                 dbg!("Error: {}", e);
@@ -49,18 +51,34 @@ impl Task for CreatePool {
     }
 }
 
+/// Get object id of `LotteryPool` in `ObjectChange`  , if not exists, return None.
+fn get_lottery_pool_id(object_change: &ObjectChange) -> Option<String> {
+    match object_change {
+        ObjectChange::Created {
+            object_id,
+            object_type,
+            ..
+        } if object_type.name.as_str() == "LotteryPool" => Some(object_id.to_string()),
+        _ => None,
+    }
+}
+
 /// Create a pool with current timestamp, and price is 1 SUI.
 /// the contract info is from the latest contract in the database.
 ///
 /// # Errors
 ///
 /// When the contract is not found in the database
+///
+/// # Panics
+///
+/// Never
 pub async fn create_pool(
     ctx: &AppContext,
     pool_type: &str,
     coin_type: &str,
     _vars: &task::Vars,
-) -> Result<SuiTransactionBlockResponse, anyhow::Error> {
+) -> Result<String, anyhow::Error> {
     let (client, active_address, _recipient) = setup_and_write().await?;
 
     let coin = fetch_coin(&client, active_address)
@@ -72,17 +90,12 @@ pub async fn create_pool(
     let package_id = contract.package_id;
     let registry_id = contract.registry_id;
     let registry_initial_version = u64::from(contract.registry_initial_version.unsigned_abs());
+    let price = 1_000_000_000;
 
     let create_cap_id = contract.create_cap_id;
-    // let registry_initial_version = 309_765_686;
-    // let draw_cap_id = "0xbbc3b417fa1d9e8babca85bd0422b2e11645b6c652796d219c9923412fbc29ce".to_string();
 
-    // let package_id = "0x01cb20532799748945d18ed656b6e3af9726d0067a316796f150beb736793bd6".to_string();
-    // let registry_id = "0x952569689168ac41183bf1c9028034d2bf437ad817c7e6a21a155a5e95506fe7".to_string();
-    // let registry_initial_version = 309_765_686;
-    // let create_cap_id = "0x84244e7ac30b25e71e99a1eb0b63dbb973bc0cfdb0b933a5a1ee270d4e4f6b97".to_string();
-
-    let end_time = get_millis_after_1_day();
+    let end_time = get_datetime_after_1_day();
+    let end_time_ms = get_millis_after_1_day();
 
     let create_pool_pt = build_create_lottery_pool_pt(
         &client,
@@ -90,8 +103,8 @@ pub async fn create_pool(
         &create_cap_id,
         &registry_id,
         registry_initial_version,
-        1_000_000_000,
-        end_time,
+        price,
+        end_time_ms,
         pool_type,
         coin_type,
     )
@@ -101,50 +114,43 @@ pub async fn create_pool(
     let gas_budget = 10_000_000;
     let gas_price = client.read_api().get_reference_gas_price().await?;
 
-    call_function(
+    let resp = call_function(
         &client,
         keystore,
-        // set_fee_rate_pt,
-        // draw_pool_pt,
         create_pool_pt,
         vec![coin.object_ref()],
         gas_budget,
         gas_price,
         active_address,
     )
-    .await
+    .await?;
 
-    // let create_pool_pt = build_create_lottery_pool_pt(
-    //     &client,
-    //     "0x008e376008022ef5c0ce479072d93533b5b28222159e111806d38168e86a8f50",
-    //     "0xc09adf5e3984f1bcf14d559a80ed6d3a1f50f6fbfc4d4d084bb6e9136caff22f",
-    //     "0x1ab10df973a6020f3cf158bbc095337229e6340b0a51191f4d6d1fa3e80e7095",
-    //     289_569_513,
-    //     100_000_000,
-    //     1_737_165_600_000,
-    //     "daily",
-    //     "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-    // )
-    // .await?;
+    if let Some(os) = resp.object_changes {
+        let lottery_pool_id = os.iter().find_map(get_lottery_pool_id);
 
-    // let keystore = FileBasedKeystore::new(&sui_config_dir()?.join(SUI_KEYSTORE_FILENAME))?;
-    // let gas_budget = 10_000_000;
-    // let gas_price = client.read_api().get_reference_gas_price().await?;
+        if let Some(lottery_pool_id) = lottery_pool_id {
+            // build pool
+            let pool = pools::ActiveModel {
+                pool_id: Set(lottery_pool_id.clone()),
+                price: Set(i32::try_from(price)?),
+                type_name: Set(pool_type.to_string()),
+                pool_type: Set(pool_type.to_string()),
+                start_time: Set(chrono::Utc::now().into()),
+                end_time: Set(end_time.into()),
+                drawn_time: Set(None),
+                lucky_number: Set(None),
+                round: Set(None),
+                epoch: Set(None),
+                is_active: Set(true),
+                contract_id: Set(contract.id),
+                ..Default::default()
+            };
 
-    // let resp = call_function(
-    //     &client,
-    //     keystore,
-    //     // set_fee_rate_pt,
-    //     // draw_pool_pt,
-    //     create_pool_pt,
-    //     vec![coin.object_ref()],
-    //     gas_budget,
-    //     gas_price,
-    //     active_address,
-    // )
-    // .await?;
+            pool.insert(&ctx.db).await?;
 
-    // dbg!("{}", resp.object_changes.clone());
+            return Ok(lottery_pool_id);
+        }
+    }
 
-    // Ok(resp)
+    anyhow::bail!("Failed to get lottery pool id");
 }

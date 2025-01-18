@@ -10,7 +10,7 @@
 //!  8. save the object id to the database
 //!
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 
 use futures::{future, stream::StreamExt};
 
@@ -244,14 +244,20 @@ pub async fn setup_and_write() -> Result<(SuiClient, SuiAddress, SuiAddress), an
 /// Get current time in milliseconds
 #[must_use]
 pub fn get_current_millis() -> u64 {
-    let now = Utc::now(); 
-    now.timestamp_millis().unsigned_abs() 
+    let now = Utc::now();
+    now.timestamp_millis().unsigned_abs()
 }
 
 /// Get milleseconds after 1 day
 #[must_use]
 pub fn get_millis_after_1_day() -> u64 {
-    let now = Utc::now(); 
-    let time_ms = now.timestamp_millis() + 24 * 60 * 60 * 1000;
-    time_ms.unsigned_abs()
+    get_datetime_after_1_day().timestamp_millis().unsigned_abs()
+}
+
+/// Calculate a datetime after 1 day
+#[must_use]
+pub fn get_datetime_after_1_day() -> DateTime<Utc> {
+    let now = Utc::now();
+    now.checked_add_signed(chrono::TimeDelta::days(1))
+        .unwrap_or(now)
 }
