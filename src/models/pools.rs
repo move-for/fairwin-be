@@ -1,6 +1,8 @@
-pub use super::_entities::pools::{ActiveModel, Entity, Model};
+use loco_rs::prelude::*;
 use sea_orm::entity::prelude::*;
-pub type Pools = Entity;
+use sea_orm::Condition;
+
+pub use super::_entities::pools::{self, ActiveModel, Entity, Model};
 
 #[async_trait::async_trait]
 impl ActiveModelBehavior for ActiveModel {
@@ -19,7 +21,24 @@ impl ActiveModelBehavior for ActiveModel {
 }
 
 // implement your read-oriented logic here
-impl Model {}
+impl Model {
+    /// Find the latest undrawn & expired pool
+    ///
+    /// # Errors
+    ///
+    /// when query databse error
+    pub async fn find_latest_undrawn(db: &DbConn) -> ModelResult<Option<Self>> {
+        let _now: DateTimeWithTimeZone = chrono::Utc::now().into();
+        let pool = Entity::find()
+            .filter(
+                Condition::all().add(pools::Column::DrawnTime.is_null()), // .add(pools::Column::EndTime.lt(now)),
+            )
+            .one(db)
+            .await?;
+
+        Ok(pool)
+    }
+}
 
 // implement your write-oriented logic here
 impl ActiveModel {}

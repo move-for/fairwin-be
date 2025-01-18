@@ -18,6 +18,7 @@ use crate::{
 };
 
 pub struct CreatePool;
+
 #[async_trait]
 impl Task for CreatePool {
     fn task(&self) -> TaskInfo {
@@ -52,7 +53,7 @@ impl Task for CreatePool {
 }
 
 /// Get object id of `LotteryPool` in `ObjectChange`  , if not exists, return None.
-fn get_lottery_pool_id(object_change: &ObjectChange) -> Option<String> {
+fn get_lottery_pool_id(object_change: ObjectChange) -> Option<String> {
     match object_change {
         ObjectChange::Created {
             object_id,
@@ -63,6 +64,14 @@ fn get_lottery_pool_id(object_change: &ObjectChange) -> Option<String> {
     }
 }
 
+/// Get object id of `LotteryPool` in `Option<Vec<ObjectChange>>`  , if not exists, return None.
+#[must_use]
+pub fn get_lottery_pool_id_from_object_changes(
+    object_changes: Option<Vec<ObjectChange>>,
+) -> Option<String> {
+    object_changes.and_then(|oc| oc.iter().find_map(|oc| get_lottery_pool_id(oc.clone())))
+}
+
 /// Create a pool with current timestamp, and price is 1 SUI.
 /// the contract info is from the latest contract in the database.
 ///
@@ -70,10 +79,7 @@ fn get_lottery_pool_id(object_change: &ObjectChange) -> Option<String> {
 ///
 /// When the contract is not found in the database
 ///
-/// # Panics
-///
-/// Never
-pub async fn create_pool(
+async fn create_pool(
     ctx: &AppContext,
     pool_type: &str,
     coin_type: &str,
@@ -125,32 +131,30 @@ pub async fn create_pool(
     )
     .await?;
 
-    if let Some(os) = resp.object_changes {
-        let lottery_pool_id = os.iter().find_map(get_lottery_pool_id);
+    dbg!("{:#?}", &resp.object_changes);
 
-        if let Some(lottery_pool_id) = lottery_pool_id {
-            // build pool
-            let pool = pools::ActiveModel {
-                pool_id: Set(lottery_pool_id.clone()),
-                price: Set(i32::try_from(price)?),
-                type_name: Set(pool_type.to_string()),
-                pool_type: Set(pool_type.to_string()),
-                start_time: Set(chrono::Utc::now().into()),
-                end_time: Set(end_time.into()),
-                drawn_time: Set(None),
-                lucky_number: Set(None),
-                round: Set(None),
-                epoch: Set(None),
-                is_active: Set(true),
-                contract_id: Set(contract.id),
-                ..Default::default()
-            };
+    if let Some(lottery_pool_id) = get_lottery_pool_id_from_object_changes(resp.object_changes) {
+        // build pool
+        let pool = pools::ActiveModel {
+            pool_id: Set(lottery_pool_id.clone()),
+            price: Set(i32::try_from(price)?),
+            type_name: Set(coin_type.to_string()),
+            pool_type: Set(pool_type.to_string()),
+            start_time: Set(chrono::Utc::now().into()),
+            end_time: Set(end_time.into()),
+            drawn_time: Set(None),
+            lucky_number: Set(None),
+            round: Set(None),
+            epoch: Set(None),
+            is_active: Set(true),
+            contract_id: Set(contract.id),
+            ..Default::default()
+        };
 
-            pool.insert(&ctx.db).await?;
-
-            return Ok(lottery_pool_id);
-        }
+        pool.insert(&ctx.db).await?;
+        // }
+        Ok(lottery_pool_id)
+    } else {
+        Err(anyhow::anyhow!("Failed to create pool!"))
     }
-
-    anyhow::bail!("Failed to get lottery pool id");
 }

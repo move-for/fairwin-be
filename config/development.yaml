@@ -112,7 +112,8 @@ scheduler:
 
     create_pool:
       run: "CreatePool"
-      schedule: run every 1 minute
+      schedule: run every 3 minutes
       # output: silent
-      tags: ['base']
+      tags: ['fairwin']
+
 

@@ -60,6 +60,7 @@ impl Hooks for App {
     #[allow(unused_variables)]
     fn register_tasks(tasks: &mut Tasks) {
         tasks.register(tasks::create_pool::CreatePool);
+        tasks.register(tasks::draw_pool::DrawPool);
         // tasks-inject (do not remove)
     }
     async fn truncate(ctx: &AppContext) -> Result<()> {
