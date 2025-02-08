@@ -195,8 +195,14 @@ pub fn retrieve_wallet() -> Result<WalletContext, anyhow::Error> {
 /// # Errors
 ///
 /// When Sui network is not connected
-pub async fn setup_for_read() -> Result<(SuiClient, SuiAddress), anyhow::Error> {
-    let client = SuiClientBuilder::default().build_testnet().await?;
+pub async fn setup_for_read(network: &str) -> Result<(SuiClient, SuiAddress), anyhow::Error> {
+    let client = if network.to_ascii_lowercase() == "testnet" {
+        SuiClientBuilder::default().build_testnet().await?
+    } else if network.to_ascii_lowercase() == "mainnet" {
+        SuiClientBuilder::default().build_mainnet().await?
+    } else {
+        SuiClientBuilder::default().build_devnet().await?
+    };
 
     println!("Sui testnet version is: {}", client.api_version());
 
@@ -206,40 +212,43 @@ pub async fn setup_for_read() -> Result<(SuiClient, SuiAddress), anyhow::Error> 
 
     let active_address = wallet.active_address()?;
 
-    // println!("Active address is: {active_address}");
+    println!("Active address is: {active_address}");
 
     Ok((client, active_address))
 }
 
-/// Setup sui config to build client and get addresses
-///
-/// # Errors
-///
-/// When Sui network is not connected
-pub async fn setup_and_write() -> Result<(SuiClient, SuiAddress, SuiAddress), anyhow::Error> {
-    let (client, active_address) = setup_for_read().await?;
+// / Setup sui config to build client and get addresses
+// /
+// / # Errors
+// /
+// / When Sui network is not connected
+// pub async fn setup_and_write() -> Result<(SuiClient, SuiAddress, SuiAddress), anyhow::Error> {
+//     let (client, active_address) = setup_for_read().await?;
 
-    // let coin = fetch_coin(&client, active_address).await?;
+//     // let coin = fetch_coin(&client, active_address).await?;
 
-    // if coin.is_none() {
-    //     request_tokens_from_faucet(&client, active_address).await?;
-    // }
+//     // if coin.is_none() {
+//     //     request_tokens_from_faucet(&client, active_address).await?;
+//     // }
 
-    let wallet = retrieve_wallet()?;
+//     let wallet = retrieve_wallet()?;
 
-    let addresses = wallet.get_addresses();
+//     let addresses = wallet.get_addresses();
 
-    let addresses = addresses
-        .into_iter()
-        .filter(|a| a != &active_address)
-        .collect::<Vec<_>>();
+//     let addresses = addresses
+//         .into_iter()
+//         .filter(|a| a != &active_address)
+//         .collect::<Vec<_>>();
 
-    let recipient = addresses
-        .first()
-        .ok_or_else(|| anyhow::anyhow!("No addresses found"))?;
+//     let recipient = addresses
+//         .first()
+//         .ok_or_else(|| anyhow::anyhow!("No addresses found"))?;
 
-    Ok((client, active_address, *recipient))
-}
+//     dbg!("{:?}", &recipient);
+//     dbg!("{:?}", &active_address);
+
+//     Ok((client, active_address, *recipient))
+// }
 
 /// Get current time in milliseconds
 #[must_use]
@@ -260,4 +269,6 @@ pub fn get_datetime_after_1_day() -> DateTime<Utc> {
     let now = Utc::now();
     now.checked_add_signed(chrono::TimeDelta::days(1))
         .unwrap_or(now)
+
+    // DateTime::<Utc>::from_timestamp(now.timestamp() + 60, 0).unwrap_or(now)
 }

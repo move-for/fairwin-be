@@ -111,8 +111,16 @@ scheduler:
       tags: ['base', 'infra']
 
     create_pool:
-      run: "CreatePool"
+      run: "create_pool network:testnet"
       schedule: run every 3 minutes
+      # schedule: at 10:00 am
+      # output: silent
+      tags: ['fairwin']
+
+    draw_pool:
+      run: "draw_pool network:testnet"
+      schedule: run every 4 minutes
+      # schedule: at 10:10 am
       # output: silent
       tags: ['fairwin']
 

@@ -10,12 +10,12 @@ default-run = "fairwin-cli"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
-loco-rs = { version = "0.14.0" }
+loco-rs = { version = "0.14" }
 
 [dependencies]
-shuttle-axum = "0.51.0"
-shuttle-runtime = { version = "0.51.0", default-features = false }
-shuttle-shared-db = { version = "0.51.0", default-features = false, features = ["postgres", "sqlx"] }
+shuttle-axum = "0.52.0"
+shuttle-runtime = { version = "0.52.0", default-features = false }
+shuttle-shared-db = { version = "0.52.0", default-features = false, features = ["postgres", "sqlx"] }
 
 loco-rs = { workspace = true  }
 serde = { version = "1", features = ["derive"] }
@@ -23,7 +23,7 @@ serde_json = { version = "1" }
 tokio = { version = "1.33.0", default-features = false, features = [
   "rt-multi-thread",
 ] }
-async-trait = { version = "0.1.74" }
+async-trait = { version = "0.1" }
 axum = { version = "0.8.1" }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter", "json"] }

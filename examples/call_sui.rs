@@ -1,6 +1,6 @@
 use fairwin::tools::{
     ptb::build_create_lottery_pool_pt,
-    util::{call_function, fetch_coin, setup_and_write},
+    util::{call_function, fetch_coin, setup_for_read},
 };
 
 use sui_keys::keystore::FileBasedKeystore;
@@ -9,7 +9,7 @@ use sui_config::{sui_config_dir, SUI_KEYSTORE_FILENAME};
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    let (client, active_address, _recipient) = setup_and_write().await?;
+    let (client, active_address) = setup_for_read("testnet").await?;
 
     let coin = fetch_coin(&client, active_address).await?.unwrap();
 

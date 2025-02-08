@@ -1,6 +1,6 @@
 use loco_rs::prelude::*;
-use sea_orm::entity::prelude::*;
 use sea_orm::Condition;
+use sea_orm::{entity::prelude::*, QueryOrder};
 
 pub use super::_entities::pools::{self, ActiveModel, Entity, Model};
 
@@ -31,7 +31,27 @@ impl Model {
         let _now: DateTimeWithTimeZone = chrono::Utc::now().into();
         let pool = Entity::find()
             .filter(
-                Condition::all().add(pools::Column::DrawnTime.is_null()), // .add(pools::Column::EndTime.lt(now)),
+                Condition::all()
+                    .add(pools::Column::DrawnTime.is_null()) // .add(pools::Column::EndTime.lt(now)),
+                    .add(pools::Column::IsActive.eq(true)),
+            )
+            .order_by_desc(pools::Column::Id)
+            .one(db)
+            .await?;
+
+        Ok(pool)
+    }
+
+    /// find the oldest undrawn & expired pool
+    ///
+    /// # Errors
+    pub async fn find_oldest_undrawn(db: &DbConn) -> ModelResult<Option<Self>> {
+        let _now: DateTimeWithTimeZone = chrono::Utc::now().into();
+        let pool = Entity::find()
+            .filter(
+                Condition::all()
+                    .add(pools::Column::DrawnTime.is_null()) // .add(pools::Column::EndTime.lt(now)),
+                    .add(pools::Column::IsActive.eq(true)),
             )
             .one(db)
             .await?;

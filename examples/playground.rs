@@ -27,10 +27,29 @@ async fn main() -> loco_rs::Result<()> {
     // let res = pools::Entity::find().all(&ctx.db).await.unwrap();
     // println!("{:?}", res);
 
+    // let package_id =
+    //     "0x01cb20532799748945d18ed656b6e3af9726d0067a316796f150beb736793bd6".to_string();
+    // let registry_id =
+    //     "0x952569689168ac41183bf1c9028034d2bf437ad817c7e6a21a155a5e95506fe7".to_string();
+    // let network = "testnet".to_string();
+    // let is_active = true;
+    // let created_at = DateTime::<Utc>::from_timestamp_millis(1_736_560_800_000)
+    //     .unwrap()
+    //     .into();
+
+    // let updated_at: DateTimeWithTimeZone = created_at;
+    // let version = 1;
+    // let vault_id = "0xccd1c8ef21955356210536278492c56f677d99ed9dbd2df5738672a76001c0e9".to_string();
+    // let create_cap_id =
+    //     "0x84244e7ac30b25e71e99a1eb0b63dbb973bc0cfdb0b933a5a1ee270d4e4f6b97".to_string();
+    // let registry_initial_version = 309_765_686;
+    // let draw_cap_id =
+    //     "0xbbc3b417fa1d9e8babca85bd0422b2e11645b6c652796d219c9923412fbc29ce".to_string();
+
     let package_id =
-        "0x01cb20532799748945d18ed656b6e3af9726d0067a316796f150beb736793bd6".to_string();
+        "0xf46e964da38d830fcf7cbff523626b133c439a9c8aaa9d8dc367b92f31903df5".to_string();
     let registry_id =
-        "0x952569689168ac41183bf1c9028034d2bf437ad817c7e6a21a155a5e95506fe7".to_string();
+        "0x42db983ef1dc782369170fdeb0aa04d7b6b122c8d523383209dabc2133909b84".to_string();
     let network = "testnet".to_string();
     let is_active = true;
     let created_at = DateTime::<Utc>::from_timestamp_millis(1_736_560_800_000)
@@ -39,14 +58,14 @@ async fn main() -> loco_rs::Result<()> {
 
     let updated_at: DateTimeWithTimeZone = created_at;
     let version = 1;
-    let vault_id = "0xccd1c8ef21955356210536278492c56f677d99ed9dbd2df5738672a76001c0e9".to_string();
+    let vault_id = "0xd96eeb72922d6973ea8b7e488d5b468114f77a7ce4c70f2737edbfe805d3f5d2".to_string();
     let create_cap_id =
-        "0x84244e7ac30b25e71e99a1eb0b63dbb973bc0cfdb0b933a5a1ee270d4e4f6b97".to_string();
-    let registry_initial_version = 309_765_686;
+        "0x5d0bc92257489ec6e5b45d08dc7bfb36ee81d369709024cc4f6b1484346e4ae6".to_string();
+    let registry_initial_version = 309_765_853;
     let draw_cap_id =
-        "0xbbc3b417fa1d9e8babca85bd0422b2e11645b6c652796d219c9923412fbc29ce".to_string();
+        "0xb964506789ac4564efc94636612d4fd23fcbb91b8bca0569d27e7cc73d0294ec".to_string();
 
-    let _active_model = contracts::ActiveModel {
+    let active_model = contracts::ActiveModel {
         package_id: Set(package_id.to_string()),
         registry_id: Set(registry_id.to_string()),
         network: Set(network.to_string()),
@@ -62,12 +81,16 @@ async fn main() -> loco_rs::Result<()> {
         ..Default::default()
     };
 
-    // active_model.insert(&ctx.db).await.unwrap();
+    active_model.insert(&ctx.db).await.unwrap();
 
     // let res = contracts::Model::find_by_registry_id(&ctx.db, "0x952569689168ac41183bf1c9028034d2bf437ad817c7e6a21a155a5e95506fe7")
     //     .await
     //     .unwrap();
-    let res = contracts::Model::find_latest(&ctx.db).await.unwrap();
+    let res = contracts::Model::find_latest(&ctx.db, &network)
+        .await
+        .unwrap();
+
+    dbg!("{:?}", &res);
 
     assert_eq!(res.registry_id, registry_id);
     assert_eq!(res.package_id, package_id);

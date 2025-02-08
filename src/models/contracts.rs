@@ -59,8 +59,9 @@ impl Model {
     /// # Errors
     ///
     /// When the contract is not found in the database
-    pub async fn find_latest(db: &DatabaseConnection) -> ModelResult<Self> {
+    pub async fn find_latest(db: &DatabaseConnection, network: &str) -> ModelResult<Self> {
         let contract = contracts::Entity::find()
+            .filter(contracts::Column::Network.eq(network))
             .order_by_desc(contracts::Column::Id)
             .one(db)
             .await?;

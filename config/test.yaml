@@ -90,3 +90,31 @@ auth:
     # Token expiration time in seconds
     expiration: 604800 # 7 days
 
+scheduler:
+  # Location of shipping the command stdout and stderr.
+  output: stdout
+  # A list of jobs to be scheduled.
+  jobs:
+    cmd_write:
+      # by default false meaning execute the run value as a task. 
+      # If true, execute the run value as shell command
+      shell: true
+      # Command to run
+      run: "echo hello test >> ./scheduler.txt"
+      schedule: run every 1 minute
+      output: silent
+      tags: ['base', 'infra']
+
+    create_pool:
+      run: "create_pool network:testnet"
+      schedule: run every 3 minutes
+      # schedule: at 10:00 am
+      # output: silent
+      tags: ['fairwin']
+
+    draw_pool:
+      run: "draw_pool network:testnet"
+      schedule: at 10:10 am
+      # output: silent
+      tags: ['fairwin']
+

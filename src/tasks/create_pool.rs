@@ -1,5 +1,6 @@
 // use chrono::{DateTime, Utc};
 
+use chrono::Utc;
 use loco_rs::prelude::*;
 
 use sui_config::{sui_config_dir, SUI_KEYSTORE_FILENAME};
@@ -12,7 +13,7 @@ use crate::{
         ptb::build_create_lottery_pool_pt,
         util::{
             call_function, fetch_coin, get_datetime_after_1_day, get_millis_after_1_day,
-            setup_and_write,
+            setup_for_read,
         },
     },
 };
@@ -23,7 +24,7 @@ pub struct CreatePool;
 impl Task for CreatePool {
     fn task(&self) -> TaskInfo {
         TaskInfo {
-            name: "CreatePool".to_string(),
+            name: "create_pool".to_string(),
             detail: "Task generator for Create pool".to_string(),
         }
     }
@@ -53,7 +54,7 @@ impl Task for CreatePool {
 }
 
 /// Get object id of `LotteryPool` in `ObjectChange`  , if not exists, return None.
-fn get_lottery_pool_id(object_change: ObjectChange) -> Option<String> {
+fn get_lottery_pool_id_from_created(object_change: ObjectChange) -> Option<String> {
     match object_change {
         ObjectChange::Created {
             object_id,
@@ -66,10 +67,13 @@ fn get_lottery_pool_id(object_change: ObjectChange) -> Option<String> {
 
 /// Get object id of `LotteryPool` in `Option<Vec<ObjectChange>>`  , if not exists, return None.
 #[must_use]
-pub fn get_lottery_pool_id_from_object_changes(
+pub fn get_lottery_pool_id_from_object_changes_created(
     object_changes: Option<Vec<ObjectChange>>,
 ) -> Option<String> {
-    object_changes.and_then(|oc| oc.iter().find_map(|oc| get_lottery_pool_id(oc.clone())))
+    object_changes.and_then(|oc| {
+        oc.iter()
+            .find_map(|oc| get_lottery_pool_id_from_created(oc.clone()))
+    })
 }
 
 /// Create a pool with current timestamp, and price is 1 SUI.
@@ -83,15 +87,21 @@ async fn create_pool(
     ctx: &AppContext,
     pool_type: &str,
     coin_type: &str,
-    _vars: &task::Vars,
+    vars: &task::Vars,
 ) -> Result<String, anyhow::Error> {
-    let (client, active_address, _recipient) = setup_and_write().await?;
+    let network = vars
+        .cli_arg("network")
+        .map_or_else(|_| "testnet".to_string(), std::string::ToString::to_string);
+
+    dbg!("{:?}", &network);
+
+    let (client, active_address) = setup_for_read(&network).await?;
 
     let coin = fetch_coin(&client, active_address)
         .await?
         .ok_or_else(|| anyhow::anyhow!("Failed to fetch coin"))?;
 
-    let contract = contracts::Model::find_latest(&ctx.db).await?;
+    let contract = contracts::Model::find_latest(&ctx.db, &network).await?;
 
     let package_id = contract.package_id;
     let registry_id = contract.registry_id;
@@ -100,6 +110,7 @@ async fn create_pool(
 
     let create_cap_id = contract.create_cap_id;
 
+    let created_time = Utc::now();
     let end_time = get_datetime_after_1_day();
     let end_time_ms = get_millis_after_1_day();
 
@@ -133,14 +144,16 @@ async fn create_pool(
 
     dbg!("{:#?}", &resp.object_changes);
 
-    if let Some(lottery_pool_id) = get_lottery_pool_id_from_object_changes(resp.object_changes) {
+    if let Some(lottery_pool_id) =
+        get_lottery_pool_id_from_object_changes_created(resp.object_changes)
+    {
         // build pool
         let pool = pools::ActiveModel {
             pool_id: Set(lottery_pool_id.clone()),
             price: Set(i32::try_from(price)?),
             type_name: Set(coin_type.to_string()),
             pool_type: Set(pool_type.to_string()),
-            start_time: Set(chrono::Utc::now().into()),
+            start_time: Set(created_time.into()),
             end_time: Set(end_time.into()),
             drawn_time: Set(None),
             lucky_number: Set(None),

@@ -1,15 +1,14 @@
 use loco_rs::prelude::*;
 
 use sui_config::{sui_config_dir, SUI_KEYSTORE_FILENAME};
-
+use sui_json_rpc_types::ObjectChange;
 use sui_keys::keystore::FileBasedKeystore;
 
 use crate::{
     models::{contracts, pools},
-    tasks::create_pool::get_lottery_pool_id_from_object_changes,
     tools::{
         ptb::build_draw_lottery_pool_pt,
-        util::{call_function, fetch_coin, setup_and_write},
+        util::{call_function, fetch_coin, setup_for_read},
     },
 };
 
@@ -47,8 +46,12 @@ impl Task for DrawPool {
 /// # Errors
 ///
 /// When the pool is not found in the database
-async fn draw_pool(ctx: &AppContext, _vars: &task::Vars) -> Result<(), anyhow::Error> {
-    let (client, active_address, _recipient) = setup_and_write().await?;
+async fn draw_pool(ctx: &AppContext, vars: &task::Vars) -> Result<(), anyhow::Error> {
+    let network = vars
+        .cli_arg("network")
+        .map_or_else(|_| "testnet".to_string(), std::string::ToString::to_string);
+
+    let (client, active_address) = setup_for_read(&network).await?;
 
     let coin = fetch_coin(&client, active_address).await?.unwrap();
 
@@ -56,14 +59,19 @@ async fn draw_pool(ctx: &AppContext, _vars: &task::Vars) -> Result<(), anyhow::E
     let gas_budget = 10_000_000;
     let gas_price = client.read_api().get_reference_gas_price().await?;
 
-    let pool = pools::Model::find_latest_undrawn(&ctx.db).await?;
+    let pool = pools::Model::find_oldest_undrawn(&ctx.db).await?;
+
+    dbg!("{:?}", &pool);
 
     if let Some(pool) = pool {
         let contract = pool.find_related(contracts::Entity).one(&ctx.db).await?;
 
         if let Some(contract) = contract {
             dbg!("{:?}", &contract);
-            dbg!("{:?}", &pool);
+
+            let registry_initial_version =
+                u64::from(contract.registry_initial_version.unsigned_abs());
+            dbg!("{:?}", &registry_initial_version);
 
             let vault_id = &contract.vault_id;
             let draw_pool_pt = build_draw_lottery_pool_pt(
@@ -71,14 +79,14 @@ async fn draw_pool(ctx: &AppContext, _vars: &task::Vars) -> Result<(), anyhow::E
                 &contract.package_id,
                 &contract.draw_cap_id,
                 &contract.registry_id,
-                u64::from(contract.registry_initial_version.unsigned_abs()),
+                registry_initial_version,
                 vault_id,
                 &pool.pool_id,
                 &pool.type_name,
             )
             .await?;
 
-            dbg!("{:?}", &draw_pool_pt);
+            // dbg!("{:?}", &draw_pool_pt);
 
             let resp = call_function(
                 &client,
@@ -91,14 +99,43 @@ async fn draw_pool(ctx: &AppContext, _vars: &task::Vars) -> Result<(), anyhow::E
             )
             .await?;
 
-            if get_lottery_pool_id_from_object_changes(resp.object_changes).is_some() {
+            dbg!("{:?}", &resp.object_changes);
+
+            if get_lottery_pool_id_from_object_changes_mutated(resp.object_changes).is_some() {
                 let mut pool: pools::ActiveModel = pool.into();
                 pool.drawn_time = Set(Some(chrono::Utc::now().into()));
-                pool.update(&ctx.db).await?;
+                pool.is_active = Set(false);
+
+                dbg!("{:?}", &pool);
+
+                let resp = pool.update(&ctx.db).await?;
+                dbg!("{:?}", &resp);
             }
-            // dbg!("{:?}", &resp);
         }
     }
 
     Ok(())
+}
+
+/// Get object id of `LotteryPool` in `ObjectChange`  , if not exists, return None.
+fn get_lottery_pool_id_from_mutate(object_change: ObjectChange) -> Option<String> {
+    match object_change {
+        ObjectChange::Mutated {
+            object_id,
+            object_type,
+            ..
+        } if object_type.name.as_str() == "LotteryPool" => Some(object_id.to_string()),
+        _ => None,
+    }
+}
+
+/// Get object id of `LotteryPool` in `Option<Vec<ObjectChange>>`  , if not exists, return None.
+#[must_use]
+pub fn get_lottery_pool_id_from_object_changes_mutated(
+    object_changes: Option<Vec<ObjectChange>>,
+) -> Option<String> {
+    object_changes.and_then(|oc| {
+        oc.iter()
+            .find_map(|oc| get_lottery_pool_id_from_mutate(oc.clone()))
+    })
 }
